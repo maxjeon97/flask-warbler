@@ -125,9 +125,7 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
-    form = g.csrf_form
-
-    if form.validate_on_submit():
+    if g.csrf_form.validate_on_submit():
         do_logout()
         flash("Succesfully logged out")
         return redirect('/login')
@@ -169,7 +167,6 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-
     return render_template('users/show.html', user=user, form=g.csrf_form)
 
 
@@ -242,7 +239,7 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
-def profile():
+def edit_profile():
     """Update profile for current user."""
 
     if not g.user:
@@ -254,6 +251,7 @@ def profile():
     if form.validate_on_submit():
         psw = form.password.data
 
+        # user is either a user instance or False
         user = User.authenticate(g.user.username, psw)
 
         if user:
@@ -279,7 +277,7 @@ def profile():
             return render_template('users/edit.html', form=form)
 
     else:
-        return render_template('users/edit.html', form=form)
+        return render_template('users/edit.html', form=form, user=g.user)
 
 
 @app.post('/users/delete')
