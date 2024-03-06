@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -205,6 +205,10 @@ def start_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    if g.user.id == follow_id:
+        flash("You can't follow yourself!", "danger")
+        return redirect('/')
+
     if g.csrf_form.validate_on_submit():
         followed_user = User.query.get_or_404(follow_id)
         g.user.following.append(followed_user)
@@ -273,8 +277,8 @@ def edit_profile():
                 return redirect(f'/users/{user.id}')
 
         else:
-            flash("Incorrect password")
-            return render_template('users/edit.html', form=form)
+            flash("Incorrect password", 'danger')
+            return render_template('users/edit.html', form=form, user=g.user)
 
     else:
         return render_template('users/edit.html', form=form, user=g.user)
@@ -293,6 +297,9 @@ def delete_user():
 
     if g.csrf_form.validate_on_submit():
         do_logout()
+
+        for message in g.user.messages:
+            db.session.delete(message)
 
         db.session.delete(g.user)
         db.session.commit()
