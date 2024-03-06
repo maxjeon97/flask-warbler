@@ -9,3 +9,11 @@ Moved db.session.add(user) from User model signup classmethod to the signup view
 
 Update error message for integrityerror sign up
 
+Stopfollowing, remove check
+
+startfollowing, cant follow yourself
+
+deleting a user, cascade wasn't working
+
+you cant unfollow someone who you arent following
+you cant follow someone that you are already following

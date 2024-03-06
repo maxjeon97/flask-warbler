@@ -210,9 +210,14 @@ def start_following(follow_id):
         return redirect('/')
 
     if g.csrf_form.validate_on_submit():
+
         followed_user = User.query.get_or_404(follow_id)
-        g.user.following.append(followed_user)
-        db.session.commit()
+
+        if followed_user in g.user.following:
+            flash("You are already following that person")
+        else:
+            g.user.following.append(followed_user)
+            db.session.commit()
 
         return redirect(f"/users/{g.user.id}/following")
 
@@ -233,8 +238,11 @@ def stop_following(follow_id):
 
     if g.csrf_form.validate_on_submit():
         followed_user = User.query.get_or_404(follow_id)
-        g.user.following.remove(followed_user)
-        db.session.commit()
+        if followed_user not in g.user.following:
+            flash("You can't unfollow someone that you're not following")
+        else:
+            g.user.following.remove(followed_user)
+            db.session.commit()
 
         return redirect(f"/users/{g.user.id}/following")
 
@@ -258,27 +266,26 @@ def edit_profile():
         # user is either a user instance or False
         user = User.authenticate(g.user.username, psw)
 
-        if user:
-            try:
-                user.username = form.username.data
-                user.email = form.email.data
-                user.image_url = form.image_url.data or User.image_url.default.arg
-                user.header_image_url = (form.header_image_url.data
-                                         or User.header_image_url.default.arg)
-                user.bio = form.bio.data
-
-                db.session.commit()
-
-            except IntegrityError:
-                flash("Username or email already taken", 'danger')
-                return render_template('users/edit.html', form=form)
-
-            else:
-                return redirect(f'/users/{user.id}')
-
-        else:
+        if not user:
             flash("Incorrect password", 'danger')
             return render_template('users/edit.html', form=form, user=g.user)
+
+        try:
+            user.username = form.username.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data or User.image_url.default.arg
+            user.header_image_url = (form.header_image_url.data
+                                        or User.header_image_url.default.arg)
+            user.bio = form.bio.data
+
+            db.session.commit()
+
+        except IntegrityError:
+            flash("Username or email already taken", 'danger')
+            return render_template('users/edit.html', form=form)
+
+        else:
+            return redirect(f'/users/{user.id}')
 
     else:
         return render_template('users/edit.html', form=form, user=g.user)
