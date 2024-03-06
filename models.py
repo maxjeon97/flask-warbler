@@ -179,7 +179,7 @@ class Message(db.Model):
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete='cascade'),
+        db.ForeignKey('users.id'),
         nullable=False,
     )
 

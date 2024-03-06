@@ -31,7 +31,6 @@ connect_db(app)
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
-
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
 
@@ -125,6 +124,9 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
+    # Add check that someone is actually logged in
+    # if g.user
+
     if g.csrf_form.validate_on_submit():
         do_logout()
         flash("Succesfully logged out")
@@ -157,15 +159,14 @@ def list_users():
 
     return render_template('users/index.html', users=users, form=g.csrf_form)
 
+# TODO: dont have to pass form, can access g in jinja
 
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
     """Show user profile."""
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-
     user = User.query.get_or_404(user_id)
     return render_template('users/show.html', user=user, form=g.csrf_form)
 
@@ -281,6 +282,7 @@ def edit_profile():
             db.session.commit()
 
         except IntegrityError:
+            # TODO: db.session.rollback
             flash("Username or email already taken", 'danger')
             return render_template('users/edit.html', form=form)
 
@@ -305,6 +307,7 @@ def delete_user():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
+        # TODO: make this not an n+1
         for message in g.user.messages:
             db.session.delete(message)
 
