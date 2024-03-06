@@ -382,8 +382,14 @@ def homepage():
     """
 
     if g.user:
+        self_plus_is_following = g.user.following.copy()
+        self_plus_is_following.append(g.user)
+
+        ids = [u.id for u in self_plus_is_following]
+
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
@@ -392,6 +398,20 @@ def homepage():
 
     else:
         return render_template('home-anon.html', form=g.csrf_form)
+
+
+@app.errorhandler(Unauthorized)
+def page_unauthorized(e):
+    """Shows Unauthorized page."""
+
+    return render_template('unauthorized.html', form=g.csrf_form), 401
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Shows 404 NOT FOUND page."""
+
+    return render_template('404.html', form=g.csrf_form), 404
 
 
 @app.after_request
