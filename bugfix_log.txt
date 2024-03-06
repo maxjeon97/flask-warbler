@@ -3,4 +3,5 @@ Added user-specific authorization for deleting a message
 Removed username and password length constraints for login form because we do not want to
     give hints on how long each should be
 Moved db.session.add(user) from User model signup classmethod to the signup view function
+Uodate error messagfe for integrityerror sign up
 

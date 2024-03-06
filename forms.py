@@ -33,6 +33,25 @@ class UserAddForm(FlaskForm):
     )
 
 
+class UserEditForm(UserAddForm):
+    """Form for editing users"""
+
+    header_image_url = StringField(
+        '(Optional) Header Image URL',
+        validators=[Optional(), URL(), Length(max=255)]
+    )
+
+    bio = TextAreaField(
+        '(Optional) Bio',
+        validators=[Optional()]
+    )
+
+    password = PasswordField(
+        'Password',
+        validators=[InputRequired()]
+    )
+
+
 class LoginForm(FlaskForm):
     """Login form."""
 
@@ -45,6 +64,7 @@ class LoginForm(FlaskForm):
         'Password',
         validators=[InputRequired()]
     )
+
 
 class CSRFProtectForm(FlaskForm):
     """ Form for CSRF protection """

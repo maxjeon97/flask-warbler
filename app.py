@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, UserEditForm
 from models import db, connect_db, User, Message
 
 load_dotenv()
@@ -37,6 +37,7 @@ def add_user_to_g():
 
     else:
         g.user = None
+
 
 @app.before_request
 def add_csrf_form_to_g():
@@ -87,7 +88,7 @@ def signup():
             db.session.commit()
 
         except IntegrityError:
-            flash("Username already taken", 'danger')
+            flash("Username or email already taken", 'danger')
             return render_template('users/signup.html', form=form)
 
         do_login(user)
@@ -133,8 +134,6 @@ def logout():
 
     else:
         raise Unauthorized()
-
-
 
 
 ##############################################################################
@@ -242,12 +241,45 @@ def stop_following(follow_id):
         raise Unauthorized()
 
 
-
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = UserEditForm(obj=g.user)
+
+    if form.validate_on_submit():
+        psw = form.password.data
+
+        user = User.authenticate(g.user.username, psw)
+
+        if user:
+            try:
+                user.username = form.username.data
+                user.email = form.email.data
+                user.image_url = form.image_url.data or User.image_url.default.arg
+                user.header_image_url = (form.header_image_url.data
+                                         or User.header_image_url.default.arg)
+                user.bio = form.bio.data
+
+                db.session.commit()
+
+            except IntegrityError:
+                flash("Username or email already taken", 'danger')
+                return render_template('users/edit.html', form=form)
+
+            else:
+                return redirect(f'/users/{user.id}')
+
+        else:
+            flash("Incorrect password")
+            return render_template('users/edit.html', form=form)
+
+    else:
+        return render_template('users/edit.html', form=form)
 
 
 @app.post('/users/delete')
