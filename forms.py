@@ -38,12 +38,12 @@ class LoginForm(FlaskForm):
 
     username = StringField(
         'Username',
-        validators=[InputRequired(), Length(max=30)],
+        validators=[InputRequired()]
     )
 
     password = PasswordField(
         'Password',
-        validators=[InputRequired(), Length(min=6, max=50)],
+        validators=[InputRequired()]
     )
 
 class CSRFProtectForm(FlaskForm):

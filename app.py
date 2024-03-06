@@ -82,6 +82,8 @@ def signup():
                 email=form.email.data,
                 image_url=form.image_url.data or User.image_url.default.arg,
             )
+
+            db.session.add(user)
             db.session.commit()
 
         except IntegrityError:
@@ -207,11 +209,15 @@ def start_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+        return redirect(f"/users/{g.user.id}/following")
+
+    else:
+        raise Unauthorized()
 
 
 @app.post('/users/stop-following/<int:follow_id>')
@@ -225,11 +231,16 @@ def stop_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.remove(followed_user)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.remove(followed_user)
+        db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+        return redirect(f"/users/{g.user.id}/following")
+
+    else:
+        raise Unauthorized()
+
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
@@ -250,12 +261,16 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    if g.csrf_form.validate_on_submit():
+        do_logout()
 
-    db.session.delete(g.user)
-    db.session.commit()
+        db.session.delete(g.user)
+        db.session.commit()
 
-    return redirect("/signup")
+        return redirect("/signup")
+
+    else:
+        raise Unauthorized()
 
 
 ##############################################################################
@@ -313,10 +328,13 @@ def delete_message(message_id):
     if msg.user_id != g.user.id:
         raise Unauthorized()
 
-    db.session.delete(msg)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        db.session.delete(msg)
+        db.session.commit()
+        return redirect(f"/users/{g.user.id}")
 
-    return redirect(f"/users/{g.user.id}")
+    else:
+        raise Unauthorized()
 
 
 ##############################################################################

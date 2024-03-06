@@ -117,8 +117,6 @@ class User(db.Model):
             image_url=image_url,
         )
 
-        #TODO: maybe pull this out?
-        db.session.add(user)
         return user
 
     @classmethod
