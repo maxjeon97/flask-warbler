@@ -401,6 +401,9 @@ def toggle_message_like(message_id):
 
     if g.csrf_form.validate_on_submit():
 
+        if g.user.id == msg.user.id:
+            raise Unauthorized()
+
         if g.user.has_liked(msg):
             g.user.likes.remove(msg)
         else:
