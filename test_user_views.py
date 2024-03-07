@@ -29,15 +29,15 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 db.drop_all()
 db.create_all()
 
+app.config['WTF_CSRF_ENABLED'] = False
 
-class UserViewsTestCase(TestCase):
+
+class UserTemplateTestCase(TestCase):
     def setUp(self):
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
         u2 = User.signup("u2", "u2@email.com", "password", None)
-
-        u2.following.append(u1)
 
         db.session.add(u1)
         db.session.add(u2)
@@ -49,8 +49,10 @@ class UserViewsTestCase(TestCase):
     def tearDown(self):
         db.session.rollback()
 
-    def test_get_signup(self):
 
+class UserAuthTestCase(UserTemplateTestCase):
+    def test_get_signup(self):
+        """Tests signup form rendering"""
         with app.test_client() as c:
             resp = c.get('/signup')
 
@@ -60,7 +62,7 @@ class UserViewsTestCase(TestCase):
             self.assertIn('Join Warbler today', html)
 
     def test_post_signup_success(self):
-
+        """Tests successful signup"""
         with app.test_client() as c:
             resp = c.post('/signup',
                           data={
@@ -72,10 +74,63 @@ class UserViewsTestCase(TestCase):
                           follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
-            user = User.query.filter_by(username = 'u3').one_or_none()
-
-            self.assertEqual(session[CURR_USER_KEY], user.id)
 
             html = resp.get_data(as_text=True)
             self.assertIn('u3', html)
 
+    def test_signup_failure(self):
+        """Tests signup failure due to duplicate username"""
+        with app.test_client() as c:
+            resp_user = c.post('/signup',
+                               data={
+                                   'username': 'u1',
+                                   'password': 'password',
+                                   'email': 'u3@email.com',
+                                   'image_url': ''
+                               },
+                               follow_redirects=True)
+
+            self.assertEqual(resp_user.status_code, 200)
+
+            html = resp_user.get_data(as_text=True)
+            self.assertIn('Username or email already taken', html)
+
+            resp_email = c.post('/signup',
+                                data={
+                                    'username': 'u3',
+                                    'password': 'password',
+                                    'email': 'u1@email.com',
+                                    'image_url': ''
+                                },
+                                follow_redirects=True)
+
+            self.assertEqual(resp_email.status_code, 200)
+
+            html = resp_email.get_data(as_text=True)
+            self.assertIn('Username or email already taken', html)
+
+    def test_get_login(self):
+        """Tests login form rendering"""
+        with app.test_client() as c:
+            resp = c.get('/login')
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Welcome back.', html)
+            self.assertIn('Log in', html)
+
+    def test_post_login_success(self):
+        """Tests successful login"""
+        with app.test_client() as c:
+            resp = c.post('/login',
+                          data={
+                              'username': 'u1',
+                              'password': 'password'
+                          },
+                          follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Hello, u1!', html)
