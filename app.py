@@ -161,7 +161,6 @@ def list_users():
 
     return render_template('users/index.html', users=users)
 
-# TODO: dont have to pass form, can access g in jinja
 
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
@@ -280,7 +279,7 @@ def edit_profile():
             user.email = form.email.data
             user.image_url = form.image_url.data or User.image_url.default.arg
             user.header_image_url = (form.header_image_url.data
-                                        or User.header_image_url.default.arg)
+                                     or User.header_image_url.default.arg)
             user.bio = form.bio.data
 
             db.session.commit()
@@ -312,7 +311,7 @@ def delete_user():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
-        Message.query.filter_by(user_id = g.user.id).delete()
+        Message.query.filter_by(user_id=g.user.id).delete()
 
         db.session.delete(g.user)
         db.session.commit()
@@ -389,6 +388,7 @@ def delete_message(message_id):
 ##############################################################################
 # Likes routes:
 
+
 @app.post('/messages/<int:message_id>/like-toggle')
 def toggle_message_like(message_id):
     """Like a message"""
@@ -411,6 +411,7 @@ def toggle_message_like(message_id):
 
     else:
         raise Unauthorized()
+
 
 @app.get('/users/<int:user_id>/likes')
 def get_and_display_user_likes(user_id):
