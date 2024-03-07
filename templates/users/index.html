@@ -37,7 +37,6 @@
               {% else %}
               <form method="POST"
                     action="/users/follow/{{ user.id }}">
-                    <!-- {{ g.csrf_form.hidden_tag() }} -->
                     {{ g.csrf_form.hidden_tag() }}
                 <button class="btn btn-outline-primary btn-sm">
                   Follow

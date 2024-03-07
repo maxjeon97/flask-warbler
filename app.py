@@ -414,8 +414,14 @@ def toggle_message_like(message_id):
 
 @app.get('/users/<int:user_id>/likes')
 def get_and_display_user_likes(user_id):
-    """"""
+    """Displays list of liked messages"""
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('users/show_likes.html', user=user)
 
 
 ##############################################################################
