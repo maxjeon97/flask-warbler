@@ -168,6 +168,7 @@ def show_user(user_id):
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
     user = User.query.get_or_404(user_id)
     return render_template('users/show.html', user=user)
 
@@ -401,8 +402,11 @@ def toggle_message_like(message_id):
 
     if g.csrf_form.validate_on_submit():
 
+        request_url = request.form.get('origin_url', '/')
+
         if g.user.id == msg.user.id:
-            raise Unauthorized()
+            flash('Cannot like your own messages!', 'danger')
+            return redirect(request_url)
 
         if g.user.has_liked(msg):
             g.user.likes.remove(msg)
@@ -410,7 +414,7 @@ def toggle_message_like(message_id):
             g.user.likes.append(msg)
 
         db.session.commit()
-        return redirect(request.referrer)
+        return redirect(request_url)
 
     else:
         raise Unauthorized()

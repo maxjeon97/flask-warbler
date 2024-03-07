@@ -36,6 +36,8 @@ class UserModelTestCase(TestCase):
         u1 = User.signup("u1", "u1@email.com", "password", None)
         u2 = User.signup("u2", "u2@email.com", "password", None)
 
+        u2.following.append(u1)
+
         db.session.commit()
         self.u1_id = u1.id
         self.u2_id = u2.id
@@ -44,8 +46,43 @@ class UserModelTestCase(TestCase):
         db.session.rollback()
 
     def test_user_model(self):
+        """Tests that new user was instantiated"""
         u1 = User.query.get(self.u1_id)
 
         # User should have no messages & no followers
         self.assertEqual(len(u1.messages), 0)
         self.assertEqual(len(u1.followers), 0)
+
+    def test_is_following(self):
+        """Tests is_followed method"""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        self.assertTrue(u2.is_following(u1))
+        self.assertFalse(u1.is_following(u2))
+
+
+    def test_is_followed_by(self):
+        """Tests is_followed_by method"""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        self.assertTrue(u1.is_followed_by(u2))
+        self.assertFalse(u2.is_followed_by(u1))
+
+    def test_follow_relationship(self):
+        """Tests the relationship between User and Follow"""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        self.assertEqual(u1.followers, [u2])
+        self.assertEqual(u1.following, [])
+        self.assertEqual(u2.followers, [])
+        self.assertEqual(u2.following, [u1])
+
+
+
+

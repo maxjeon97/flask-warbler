@@ -22,6 +22,7 @@
       {% if message.user.id != g.user.id %}
       <form method="POST" action="/messages/{{ message.id }}/like-toggle">
         {{ g.csrf_form.hidden_tag() }}
+        <input type="hidden" name="origin_url" value="{{ request.url }}">
         <button class="btn btn-sm position-relative z-3" type="submit">
           {% if g.user.has_liked(message) %}
           <i class="bi bi-star-fill"></i>
