@@ -8,7 +8,8 @@
 import os
 from unittest import TestCase
 from flask_bcrypt import Bcrypt
-from models import db, User, Message, Follow, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from models import db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from sqlalchemy.exc import IntegrityError
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -43,6 +44,7 @@ class UserModelTestCase(TestCase):
         db.session.add(u1)
         db.session.add(u2)
         db.session.commit()
+
         self.u1_id = u1.id
         self.u2_id = u2.id
 
@@ -56,6 +58,7 @@ class UserModelTestCase(TestCase):
         # User should have no messages & 1 followers
         self.assertEqual(len(u1.messages), 0)
         self.assertEqual(len(u1.followers), 1)
+
 
     def test_is_following(self):
         """Tests is_followed method"""
@@ -76,6 +79,7 @@ class UserModelTestCase(TestCase):
         self.assertTrue(u1.is_followed_by(u2))
         self.assertFalse(u2.is_followed_by(u1))
 
+
     def test_follow_relationship(self):
         """Tests the relationship between User and Follow"""
 
@@ -86,6 +90,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u1.following, [])
         self.assertEqual(u2.followers, [])
         self.assertEqual(u2.following, [u1])
+
 
     def test_signup_success(self):
         """Tests signup success"""
@@ -107,15 +112,20 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u3.location, '')
 
 
+    def test_signup_failure(self):
+        """Tests signup failure for both existing username and email address"""
 
-    # def test_signup_failure(self):
-    #     """Tests signup failure"""
+        with self.assertRaises(IntegrityError):
+            u3 = User.signup("u1", "u3@email.com", "password", None)
+            db.session.add(u3)
+            db.session.commit()
 
-    #     u3 = User.signup("u1", "u3@email.com", "password", None)
+        db.session.rollback()
 
-
-
-
+        with self.assertRaises(IntegrityError):
+            u3 = User.signup("u3", "u1@email.com", "password", None)
+            db.session.add(u3)
+            db.session.commit()
 
 
     def test_authenticate_success(self):
@@ -125,28 +135,28 @@ class UserModelTestCase(TestCase):
         u1_prime = User.authenticate('u1', 'password')
         self.assertEqual(u1, u1_prime)
 
+
     def test_authenticate_failure(self):
         "Tests User.authenticate() failure"
 
         self.assertFalse(User.authenticate('wrong_username', 'password'))
         self.assertFalse(User.authenticate('u1', 'wrong_password'))
 
-    def test_liked_relationship(self):
-        """Tests relationship between user and likes"""
+
+    def test_has_liked(self):
+        """Tests has_liked method"""
 
         u1 = User.query.get(self.u1_id)
         u2 = User.query.get(self.u2_id)
 
-        message = Message(text='test_content')
-        u1.messages.append(message)
-        u2.likes.append(message)
+        message1 = Message(text='message1_content')
+        message2 = Message(text='message2_content')
 
-        self.assertEqual(u2.likes, [message])
-        self.assertEqual(message.users_liked, [u2])
+        u1.messages.append(message1)
+        u1.messages.append(message2)
 
+        u2.likes.append(message1)
 
-
-
-
-
+        self.assertTrue(u2.has_liked(message1))
+        self.assertFalse(u2.has_liked(message2))
 
