@@ -112,6 +112,7 @@ def login():
 
         if user:
             do_login(user)
+
             flash(f"Hello, {user.username}!", "success")
             return redirect("/")
 
@@ -129,6 +130,7 @@ def logout():
 
     if g.csrf_form.validate_on_submit():
         do_logout()
+
         flash("Succesfully logged out")
         return redirect('/login')
 
@@ -157,7 +159,7 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users, form=g.csrf_form)
+    return render_template('users/index.html', users=users)
 
 # TODO: dont have to pass form, can access g in jinja
 
@@ -168,7 +170,7 @@ def show_user(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
     user = User.query.get_or_404(user_id)
-    return render_template('users/show.html', user=user, form=g.csrf_form)
+    return render_template('users/show.html', user=user)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -180,7 +182,7 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user, form=g.csrf_form)
+    return render_template('users/following.html', user=user)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -192,7 +194,7 @@ def show_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=g.csrf_form)
+    return render_template('users/followers.html', user=user)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -211,11 +213,11 @@ def start_following(follow_id):
         return redirect('/')
 
     if g.csrf_form.validate_on_submit():
-
         followed_user = User.query.get_or_404(follow_id)
 
-        if followed_user in g.user.following:
+        if g.user.is_following(followed_user):
             flash("You are already following that person")
+
         else:
             g.user.following.append(followed_user)
             db.session.commit()
@@ -239,11 +241,13 @@ def stop_following(follow_id):
 
     if g.csrf_form.validate_on_submit():
         followed_user = User.query.get_or_404(follow_id)
-        if followed_user not in g.user.following:
-            flash("You can't unfollow someone that you're not following")
-        else:
+
+        if g.user.is_following(followed_user):
             g.user.following.remove(followed_user)
             db.session.commit()
+
+        else:
+            flash("You can't unfollow someone that you're not following")
 
         return redirect(f"/users/{g.user.id}/following")
 
@@ -269,7 +273,7 @@ def edit_profile():
 
         if not user:
             flash("Incorrect password", 'danger')
-            return render_template('users/edit.html', form=form, user=g.user)
+            return render_template('users/edit.html', form=form)
 
         try:
             user.username = form.username.data
@@ -282,7 +286,8 @@ def edit_profile():
             db.session.commit()
 
         except IntegrityError:
-            # TODO: db.session.rollback
+            db.session.rollback()
+
             flash("Username or email already taken", 'danger')
             return render_template('users/edit.html', form=form)
 
@@ -290,7 +295,7 @@ def edit_profile():
             return redirect(f'/users/{user.id}')
 
     else:
-        return render_template('users/edit.html', form=form, user=g.user)
+        return render_template('users/edit.html', form=form)
 
 
 @app.post('/users/delete')
@@ -307,9 +312,7 @@ def delete_user():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
-        # TODO: make this not an n+1
-        for message in g.user.messages:
-            db.session.delete(message)
+        Message.query.filter_by(user_id = g.user.id).delete()
 
         db.session.delete(g.user)
         db.session.commit()
@@ -355,7 +358,7 @@ def show_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    return render_template('messages/show.html', message=msg, form=g.csrf_form)
+    return render_template('messages/show.html', message=msg)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -383,6 +386,37 @@ def delete_message(message_id):
     else:
         raise Unauthorized()
 
+##############################################################################
+# Likes routes:
+
+@app.post('/messages/<int:message_id>/like-toggle')
+def toggle_message_like(message_id):
+    """Like a message"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    msg = Message.query.get_or_404(message_id)
+
+    if g.csrf_form.validate_on_submit():
+
+        if g.user.has_liked(msg):
+            g.user.likes.remove(msg)
+        else:
+            g.user.likes.append(msg)
+
+        db.session.commit()
+        return redirect(request.referrer)
+
+    else:
+        raise Unauthorized()
+
+@app.get('/users/<int:user_id>/likes')
+def get_and_display_user_likes(user_id):
+    """"""
+
+
 
 ##############################################################################
 # Homepage and error pages
@@ -409,24 +443,24 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=g.csrf_form)
+        return render_template('home.html', messages=messages)
 
     else:
-        return render_template('home-anon.html', form=g.csrf_form)
+        return render_template('home-anon.html')
 
 
 @app.errorhandler(Unauthorized)
 def page_unauthorized(e):
     """Shows Unauthorized page."""
 
-    return render_template('unauthorized.html', form=g.csrf_form), 401
+    return render_template('unauthorized.html'), 401
 
 
 @app.errorhandler(404)
 def page_not_found(e):
     """Shows 404 NOT FOUND page."""
 
-    return render_template('404.html', form=g.csrf_form), 404
+    return render_template('404.html'), 404
 
 
 @app.after_request

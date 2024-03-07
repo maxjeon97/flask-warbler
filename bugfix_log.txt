@@ -17,3 +17,15 @@ deleting a user, cascade wasn't working
 
 you cant unfollow someone who you arent following
 you cant follow someone that you are already following
+
+
+
+Things we need to do to make likes work:
+
+Whenever we render a message it has to have an interactable button that can toggle like status
+    In the html template, need to use if statement to see whether the message is liked or not by
+    current user. Will render a different icon depending on status
+
+Need a post endpoint to like or unlike a message
+
+request.referrer
