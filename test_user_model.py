@@ -8,7 +8,7 @@
 import os
 from unittest import TestCase
 from flask_bcrypt import Bcrypt
-from models import db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from models import db, User, Message, Follow, Like, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 from sqlalchemy.exc import IntegrityError
 
 # BEFORE we import our app, let's set an environmental variable
@@ -34,6 +34,9 @@ db.create_all()
 
 class UserModelTestCase(TestCase):
     def setUp(self):
+        Follow.query.delete()
+        Like.query.delete()
+        Message.query.delete()
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)

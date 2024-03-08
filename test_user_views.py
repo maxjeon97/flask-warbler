@@ -8,8 +8,7 @@
 from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
-from models import db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
-from flask import session
+from models import db, User, Message, Like, Follow, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 
 
 # BEFORE we import our app, let's set an environmental variable
@@ -34,6 +33,9 @@ app.config['WTF_CSRF_ENABLED'] = False
 
 class UserTemplateTestCase(TestCase):
     def setUp(self):
+        Follow.query.delete()
+        Like.query.delete()
+        Message.query.delete()
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
@@ -134,3 +136,146 @@ class UserAuthTestCase(UserTemplateTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn('Hello, u1!', html)
+
+    def test_post_login_failure(self):
+        """Tests unsuccesful login"""
+        with app.test_client() as c:
+            resp = c.post('/login',
+                          data={
+                              'username': 'u1',
+                              'password': 'wrong_password'
+                          },
+                          follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Invalid credentials.', html)
+
+    def test_post_logout_success(self):
+        """Tests logout"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post('/logout', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Succesfully logged out', html)
+
+    def test_post_logout_unauthorized(self):
+        """Tests logout if someone is not already logged in"""
+        with app.test_client() as c:
+            resp = c.post('/logout', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+
+class TestGeneralUserRoutes(UserTemplateTestCase):
+
+    def test_list_users(self):
+        """Tests displaying of users list"""
+
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get('/users?q=u1')
+            # how can we do this
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("u1", html)
+            self.assertNotIn("u2", html)
+
+    #TODO: base no search
+
+    def test_list_users_unauthorized(self):
+        """Tests list users with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.get('/users', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_show_user_unauthorized(self):
+        """Tests show user with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.get(f'/users/{self.u1_id}', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_show_following_unauthorized(self):
+        """Tests show following with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.get(f'/users/{self.u1_id}/following', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_show_followers_unauthorized(self):
+        """Tests show following with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.get(f'/users/{self.u1_id}/followers', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_start_following_unauthorized(self):
+        """Tests start following with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.post(f'/users/follow/{self.u1_id}', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_stop_following_unauthorized(self):
+        """Tests stop following with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.post(f'/users/stop-following/{self.u1_id}', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_edit_profile_unauthorized(self):
+        """Tests edit profile with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.get(f'/users/profile', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+    def test_delete_user_unauthorized(self):
+        """Tests delete user with nobody logged in"""
+        with app.test_client() as c:
+            resp = c.post(f'/users/delete', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("Access unauthorized.", html)
+
+
+
+

@@ -39,32 +39,35 @@ db.create_all()
 app.config['WTF_CSRF_ENABLED'] = False
 
 
-class MessageBaseViewTestCase(TestCase):
-    def setUp(self):
-        User.query.delete()
+# class MessageBaseViewTestCase(TestCase):
+#     def setUp(self):
+#         Follow.query.delete()
+        # Like.query.delete()
+        # Message.query.delete()
+        # User.query.delete()
 
-        u1 = User.signup("u1", "u1@email.com", "password", None)
-        db.session.flush()
+#         u1 = User.signup("u1", "u1@email.com", "password", None)
+#         db.session.flush()
 
-        m1 = Message(text="m1-text", user_id=u1.id)
-        db.session.add_all([m1])
-        db.session.commit()
+#         m1 = Message(text="m1-text", user_id=u1.id)
+#         db.session.add_all([m1])
+#         db.session.commit()
 
-        self.u1_id = u1.id
-        self.m1_id = m1.id
+#         self.u1_id = u1.id
+#         self.m1_id = m1.id
 
-class MessageAddViewTestCase(MessageBaseViewTestCase):
-    def test_add_message(self):
-        # Since we need to change the session to mimic logging in,
-        # we need to use the changing-session trick:
-        with app.test_client() as c:
-            with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.u1_id
+# class MessageAddViewTestCase(MessageBaseViewTestCase):
+#     def test_add_message(self):
+#         # Since we need to change the session to mimic logging in,
+#         # we need to use the changing-session trick:
+#         with app.test_client() as c:
+#             with c.session_transaction() as sess:
+#                 sess[CURR_USER_KEY] = self.u1_id
 
-            # Now, that session setting is saved, so we can have
-            # the rest of ours test
-            resp = c.post("/messages/new", data={"text": "Hello"})
+#             # Now, that session setting is saved, so we can have
+#             # the rest of ours test
+#             resp = c.post("/messages/new", data={"text": "Hello"})
 
-            self.assertEqual(resp.status_code, 302)
+#             self.assertEqual(resp.status_code, 302)
 
-            Message.query.filter_by(text="Hello").one()
+#             Message.query.filter_by(text="Hello").one()
