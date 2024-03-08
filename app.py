@@ -212,14 +212,14 @@ def start_following(follow_id):
         return redirect("/")
 
     if g.user.id == follow_id:
-        flash("You can't follow yourself!", "danger")
+        flash("You cannot follow yourself!", "danger")
         return redirect('/')
 
     if g.csrf_form.validate_on_submit():
         followed_user = User.query.get_or_404(follow_id)
 
         if g.user.is_following(followed_user):
-            flash("You are already following that person")
+            flash("You are already following that person!")
 
         else:
             g.user.following.append(followed_user)
