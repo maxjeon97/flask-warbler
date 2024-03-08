@@ -4,6 +4,7 @@
 #
 #    FLASK_DEBUG=False python -m unittest test_message_views.py
 
+from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 
@@ -19,7 +20,6 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
 
 # app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -96,7 +96,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
                 sess[CURR_USER_KEY] = self.u1_id
 
             resp = c.post("/messages/new", data={"text": "Test message!"},
-                            follow_redirects=True)
+                          follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
@@ -138,7 +138,6 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             html = resp.get_data(as_text=True)
             self.assertIn('Access unauthorized.', html)
 
-
     def test_delete_message(self):
         """Tests deletion of message"""
         with app.test_client() as c:
@@ -179,3 +178,115 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn('ACCESS UNAUTHORIZED', html)
+
+    def test_toggle_message_like(self):
+        """Tests that toggle message like works"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2_id
+
+            resp_like = c.post(f"/messages/{self.m1_id}/like-toggle",
+                               data={
+                                   "origin_url": f"/messages/{self.m1_id}"
+                               },
+                               follow_redirects=True)
+
+            self.assertEqual(resp_like.status_code, 200)
+
+            html = resp_like.get_data(as_text=True)
+            self.assertIn('<i class="bi bi-star-fill"></i>', html)
+
+            resp_unlike = c.post(f"/messages/{self.m1_id}/like-toggle",
+                                 data={
+                                     "origin_url": f"/messages/{self.m1_id}"
+                                 },
+                                 follow_redirects=True)
+
+            self.assertEqual(resp_unlike.status_code, 200)
+
+            html = resp_unlike.get_data(as_text=True)
+            self.assertIn('<i class="bi bi-star"></i>', html)
+
+    def test_toggle_message_like_own_message(self):
+        """Tests that toggle message returns redirect and flashes error
+        message in case of trying to like ones own message"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(f"/messages/{self.m1_id}/like-toggle",
+                          follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Cannot like your own messages!', html)
+
+    def test_toggle_message_like_unauthorized(self):
+        """Tests toggle message like in case where nobody is logged in"""
+        with app.test_client() as c:
+            resp = c.post(f"/messages/{self.m1_id}/like-toggle",
+                          follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Access unauthorized.', html)
+
+    def test_display_likes(self):
+        """Tests display likes"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2_id
+
+            u2 = User.query.get(self.u2_id)
+            m1 = Message.query.get(self.m1_id)
+
+            u2.likes.append(m1)
+
+            resp = c.get(f"/users/{self.u2_id}/likes")
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('m1-text', html)
+
+    def test_display_likes_unauthorized(self):
+        """Tests display likes in the case that nobody is logged in"""
+        with app.test_client() as c:
+
+            resp = c.get(f"/users/{self.u2_id}/likes", follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Access unauthorized.', html)
+
+    def test_homepage(self):
+        """Tests homepage rendering when logged in"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get('/')
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("m1-text", html)
+            self.assertIn("New Message", html)
+
+    def test_homepage_not_logged_in(self):
+        """Tests homepage rendering when not logged in"""
+        with app.test_client() as c:
+            resp = c.get('/')
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertNotIn("m1-text", html)
+            self.assertNotIn("New Message", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
+
+

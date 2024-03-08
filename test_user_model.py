@@ -164,3 +164,5 @@ class UserModelTestCase(TestCase):
         self.assertTrue(u2.has_liked(message1))
         self.assertFalse(u2.has_liked(message2))
 
+
+

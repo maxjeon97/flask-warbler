@@ -516,3 +516,18 @@ class UserRoutesTestCase(UserTemplateTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn("Access unauthorized.", html)
+
+    def test_page_not_found(self):
+        """Tests rendering of 404 page"""
+        with app.test_client() as c:
+            resp = c.get('/not-a-page-at-all')
+
+            self.assertEqual(resp.status_code, 404)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("THIS PAGE DOES NOT EXIST", html)
+
+
+
+
+
