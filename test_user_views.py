@@ -2,13 +2,12 @@
 
 # run these tests like:
 #
-#    python -m unittest test_user_model.py
+#    python -m unittest test_user_views.py
 
 
-from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
-from models import db, User, Message, Like, Follow, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from models import db, User, Message, Like, Follow
 
 
 # BEFORE we import our app, let's set an environmental variable
@@ -20,6 +19,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
+from app import app, CURR_USER_KEY
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data

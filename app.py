@@ -384,6 +384,8 @@ def delete_message(message_id):
     if g.csrf_form.validate_on_submit():
         db.session.delete(msg)
         db.session.commit()
+
+        flash('Message deleted!')
         return redirect(f"/users/{g.user.id}")
 
     else:

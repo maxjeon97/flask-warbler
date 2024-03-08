@@ -21,6 +21,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 # Now we can import app
 
 from app import app
+
 bcrypt = Bcrypt()
 
 
