@@ -4,8 +4,6 @@
 #
 #    python -m unittest test_user_views.py
 
-
-from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 from models import db, User, Message, Like, Follow
@@ -20,6 +18,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
+from app import app, CURR_USER_KEY
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
@@ -168,6 +167,9 @@ class UserAuthTestCase(UserTemplateTestCase):
             html = resp.get_data(as_text=True)
             self.assertIn('Succesfully logged out', html)
 
+            with c.session_transaction() as sess:
+                self.assertNotIn(CURR_USER_KEY, sess)
+
     def test_post_logout_unauthorized(self):
         """Tests logout if someone is not already logged in"""
         with app.test_client() as c:
@@ -203,8 +205,8 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("u1", html)
-            self.assertIn("u2", html)
+            self.assertIn("@u1", html)
+            self.assertIn("@u2", html)
 
     def test_list_users_unauthorized(self):
         """Tests displaying of users list with nobody logged in"""
@@ -225,14 +227,13 @@ class UserRoutesTestCase(UserTemplateTestCase):
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            resp = c.get('/users?q=u1')
-            # how can we do this
+            resp = c.get('/users?q=1')
 
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("u1", html)
-            self.assertNotIn("u2", html)
+            self.assertIn("@u1", html)
+            self.assertNotIn("@u2", html)
 
     def test_list_users_search_unauthorized(self):
         """Tests displaying of users search result with nobody logged in"""
@@ -545,8 +546,3 @@ class UserRoutesTestCase(UserTemplateTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn("THIS PAGE DOES NOT EXIST", html)
-
-
-
-
-

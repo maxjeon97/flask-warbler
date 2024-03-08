@@ -55,6 +55,14 @@ class UserModelTestCase(TestCase):
     def tearDown(self):
         db.session.rollback()
 
+    def test_repr(self):
+        """Tests repr for User model"""
+        u1 = User.query.get(self.u1_id)
+
+        expected_repr = f"<User #{u1.id}: {u1.username}, {u1.email}>"
+
+        self.assertEqual(repr(u1), expected_repr)
+
     def test_user_model(self):
         """Tests that new user was instantiated"""
         u1 = User.query.get(self.u1_id)
