@@ -176,7 +176,9 @@ class UserAuthTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
 
 class UserRoutesTestCase(UserTemplateTestCase):
@@ -212,7 +214,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_list_users_search(self):
         """Tests displaying of users search result"""
@@ -238,7 +242,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_show_user(self):
         """Tests show user"""
@@ -260,7 +266,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_show_following(self):
         """Tests show following"""
@@ -285,7 +293,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_show_followers(self):
         """Tests show followers"""
@@ -310,7 +320,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_start_following(self):
         """Tests start following"""
@@ -357,7 +369,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_stop_following(self):
         """Tests stop following"""
@@ -398,7 +412,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_display_edit_profile(self):
         """Tests displaying of edit profile form"""
@@ -421,7 +437,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_edit_profile(self):
         """Tests editing profile"""
@@ -504,8 +522,7 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn(
-                "Join Warbler today.", html)
+            self.assertIn("Join Warbler today", html)
 
     def test_delete_user_unauthorized(self):
         """Tests delete user with nobody logged in"""
@@ -515,7 +532,9 @@ class UserRoutesTestCase(UserTemplateTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Access unauthorized!", html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_page_not_found(self):
         """Tests rendering of 404 page"""
@@ -526,8 +545,3 @@ class UserRoutesTestCase(UserTemplateTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn("THIS PAGE DOES NOT EXIST", html)
-
-
-
-
-

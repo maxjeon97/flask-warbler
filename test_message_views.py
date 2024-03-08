@@ -4,12 +4,10 @@
 #
 #    FLASK_DEBUG=False python -m unittest test_message_views.py
 
-from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 
 from models import db, Message, User, Follow, Like
-from werkzeug.exceptions import Unauthorized
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -20,6 +18,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
+from app import app, CURR_USER_KEY
 
 # app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -87,7 +86,9 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn('Access unauthorized.', html)
+            self.assertIn('Access unauthorized!', html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_add_message(self):
         """Tests adding of message"""
@@ -96,7 +97,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
                 sess[CURR_USER_KEY] = self.u1_id
 
             resp = c.post("/messages/new", data={"text": "Test message!"},
-                          follow_redirects=True)
+                            follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
@@ -112,7 +113,9 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn('Access unauthorized.', html)
+            self.assertIn('Access unauthorized!', html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_show_message(self):
         """Tests showing of message"""
@@ -136,7 +139,9 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn('Access unauthorized.', html)
+            self.assertIn('Access unauthorized!', html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_delete_message(self):
         """Tests deletion of message"""
@@ -162,7 +167,9 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn('Access unauthorized.', html)
+            self.assertIn('Access unauthorized!', html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_delete_message_not_owned(self):
         """Tests that an Unauthorized error is raised when trying to delete
@@ -231,7 +238,9 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn('Access unauthorized.', html)
+            self.assertIn('Access unauthorized!', html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_display_likes(self):
         """Tests display likes"""
@@ -260,7 +269,9 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn('Access unauthorized.', html)
+            self.assertIn('Access unauthorized!', html)
+            self.assertIn("Sign up now", html)
+            self.assertIn("New to Warbler?", html)
 
     def test_homepage(self):
         """Tests homepage rendering when logged in"""

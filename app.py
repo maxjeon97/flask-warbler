@@ -128,7 +128,7 @@ def logout():
     """Handle logout of user and redirect to homepage."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     if g.csrf_form.validate_on_submit():
@@ -152,7 +152,7 @@ def list_users():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     search = request.args.get('q')
@@ -169,7 +169,7 @@ def list_users():
 def show_user(user_id):
     """Show user profile."""
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
@@ -181,7 +181,7 @@ def show_following(user_id):
     """Show list of people this user is following."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
@@ -193,7 +193,7 @@ def show_followers(user_id):
     """Show list of followers of this user."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
@@ -208,7 +208,7 @@ def start_following(follow_id):
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     if g.user.id == follow_id:
@@ -239,7 +239,7 @@ def stop_following(follow_id):
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     if g.csrf_form.validate_on_submit():
@@ -263,7 +263,7 @@ def edit_profile():
     """Update profile for current user."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     form = UserEditForm(obj=g.user)
@@ -309,7 +309,7 @@ def delete_user():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     if g.csrf_form.validate_on_submit():
@@ -337,7 +337,7 @@ def add_message():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     form = MessageForm()
@@ -357,7 +357,7 @@ def show_message(message_id):
     """Show a message."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
@@ -375,7 +375,7 @@ def delete_message(message_id):
     msg = Message.query.get_or_404(message_id)
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     if msg.user_id != g.user.id:
@@ -400,7 +400,7 @@ def toggle_message_like(message_id):
     """Like a message"""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
@@ -430,7 +430,7 @@ def get_and_display_user_likes(user_id):
     """Displays list of liked messages"""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
