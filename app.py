@@ -134,7 +134,7 @@ def logout():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
-        flash("Succesfully logged out")
+        flash("Succesfully logged out", 'success')
         return redirect('/login')
 
     else:
@@ -219,7 +219,7 @@ def start_following(follow_id):
         followed_user = User.query.get_or_404(follow_id)
 
         if g.user.is_following(followed_user):
-            flash("You are already following that person!")
+            flash("You are already following that person!", 'danger')
 
         else:
             g.user.following.append(followed_user)
@@ -250,7 +250,8 @@ def stop_following(follow_id):
             db.session.commit()
 
         else:
-            flash("You cannot unfollow someone that you are not following")
+            flash("You cannot unfollow someone that you are not following!",
+                  'danger')
 
         return redirect(f"/users/{g.user.id}/following")
 
@@ -275,7 +276,7 @@ def edit_profile():
         user = User.authenticate(g.user.username, psw)
 
         if not user:
-            flash("Incorrect password", 'danger')
+            flash("Incorrect password!", 'danger')
             return render_template('users/edit.html', form=form)
 
         try:
@@ -291,7 +292,7 @@ def edit_profile():
         except IntegrityError:
             db.session.rollback()
 
-            flash("Username or email already taken", 'danger')
+            flash("Username or email already taken!", 'danger')
             return render_template('users/edit.html', form=form)
 
         else:
@@ -347,6 +348,7 @@ def add_message():
         g.user.messages.append(msg)
         db.session.commit()
 
+        flash('Message added!', 'success')
         return redirect(f"/users/{g.user.id}")
 
     return render_template('messages/create.html', form=form)
@@ -385,7 +387,7 @@ def delete_message(message_id):
         db.session.delete(msg)
         db.session.commit()
 
-        flash('Message deleted!')
+        flash('Message deleted!', 'success')
         return redirect(f"/users/{g.user.id}")
 
     else:

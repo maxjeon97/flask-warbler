@@ -548,3 +548,7 @@ p.card-bio {
 .message-404 input {
   flex: 1;
 }
+
+.alert {
+  margin-top: -16px;
+}
