@@ -5,6 +5,7 @@
 #    python -m unittest test_user_model.py
 
 
+from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 from models import db, User, Message, Like, Follow, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
@@ -19,7 +20,6 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
@@ -279,7 +279,8 @@ class UserRoutesTestCase(UserTemplateTestCase):
     def test_show_following_unauthorized(self):
         """Tests show following with nobody logged in"""
         with app.test_client() as c:
-            resp = c.get(f'/users/{self.u1_id}/following', follow_redirects=True)
+            resp = c.get(f'/users/{self.u1_id}/following',
+                         follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
@@ -303,7 +304,8 @@ class UserRoutesTestCase(UserTemplateTestCase):
     def test_show_followers_unauthorized(self):
         """Tests show followers with nobody logged in"""
         with app.test_client() as c:
-            resp = c.get(f'/users/{self.u1_id}/followers', follow_redirects=True)
+            resp = c.get(f'/users/{self.u1_id}/followers',
+                         follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
@@ -338,7 +340,6 @@ class UserRoutesTestCase(UserTemplateTestCase):
             html = resp_self.get_data(as_text=True)
             self.assertIn("You cannot follow yourself!", html)
 
-
             resp_already = c.post(f'/users/follow/{self.u1_id}',
                                   follow_redirects=True)
 
@@ -350,24 +351,69 @@ class UserRoutesTestCase(UserTemplateTestCase):
     def test_start_following_unauthorized(self):
         """Tests start following with nobody logged in"""
         with app.test_client() as c:
-            resp = c.post(f'/users/follow/{self.u1_id}', follow_redirects=True)
+            resp = c.post(f'/users/follow/{self.u1_id}',
+                          follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
             self.assertIn("Access unauthorized.", html)
+
+    def test_stop_following(self):
+        """Tests stop following"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2_id
+
+            resp = c.post(f'/users/stop-following/{self.u1_id}',
+                          follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn("@u2", html)
+            self.assertNotIn("@u1", html)
+
+    def test_stop_following_failure(self):
+        """Tests stop following failure"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2_id
+
+            resp = c.post(f'/users/stop-following/{self.u3_id}',
+                          follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn(
+                "You cannot unfollow someone that you are not following", html)
 
     def test_stop_following_unauthorized(self):
         """Tests stop following with nobody logged in"""
         with app.test_client() as c:
-            resp = c.post(f'/users/stop-following/{self.u1_id}', follow_redirects=True)
+            resp = c.post(f'/users/stop-following/{self.u1_id}',
+                          follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
             self.assertIn("Access unauthorized.", html)
 
-    def test_view_edit_profile_form_unauthorized(self):
+    def test_display_edit_profile(self):
+        """Tests displaying of edit profile form"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get('/users/profile')
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('Edit Your Profile.', html)
+
+    def test_display_edit_profile_unauthorized(self):
         """Tests edit profile with nobody logged in"""
         with app.test_client() as c:
             resp = c.get('/users/profile', follow_redirects=True)
@@ -377,15 +423,89 @@ class UserRoutesTestCase(UserTemplateTestCase):
             html = resp.get_data(as_text=True)
             self.assertIn("Access unauthorized.", html)
 
-    def test_edit_profile_invalid(self):
-        """Tests edit profile with invalid username or email"""
+    def test_edit_profile(self):
+        """Tests editing profile"""
         with app.test_client() as c:
-            resp = c.post('/users/profile', follow_redirects=True)
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post('/users/profile',
+                          data={
+                              "username": "edit_username_test",
+                              "email": "u1@email.com",
+                              "password": "password"
+                          },
+                          follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
 
             html = resp.get_data(as_text=True)
-            self.assertIn("Access unauthorized.", html)
+            self.assertIn('@edit_username_test', html)
+
+    def test_edit_profile_invalid(self):
+        """Tests edit profile with invalid username or email"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp_username = c.post('/users/profile',
+                                   data={
+                                       "username": "u2",
+                                       "email": "u1@email.com",
+                                       "password": "password"
+                                   },
+                                   follow_redirects=True)
+
+            self.assertEqual(resp_username.status_code, 200)
+
+            html = resp_username.get_data(as_text=True)
+            self.assertIn("Username or email already taken", html)
+
+            resp_email = c.post('/users/profile',
+                                data={
+                                    "username": "u1",
+                                    "email": "u2@email.com",
+                                    "password": "password"
+                                },
+                                follow_redirects=True)
+
+            self.assertEqual(resp_email.status_code, 200)
+
+            html = resp_email.get_data(as_text=True)
+            self.assertIn("Username or email already taken", html)
+
+    def test_edit_profile_wrong_password(self):
+        """Tests edit profile with incorrect password"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp_username = c.post('/users/profile',
+                                   data={
+                                       "username": "new_username",
+                                       "email": "u1@email.com",
+                                       "password": "wrong_password"
+                                   },
+                                   follow_redirects=True)
+
+            self.assertEqual(resp_username.status_code, 200)
+
+            html = resp_username.get_data(as_text=True)
+            self.assertIn("Incorrect password", html)
+
+    def test_delete_user(self):
+        """Tests deleting user"""
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post('/users/delete', follow_redirects=True)
+
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn(
+                "Join Warbler today.", html)
 
     def test_delete_user_unauthorized(self):
         """Tests delete user with nobody logged in"""
@@ -396,4 +516,3 @@ class UserRoutesTestCase(UserTemplateTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn("Access unauthorized.", html)
-

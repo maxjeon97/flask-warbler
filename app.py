@@ -250,7 +250,7 @@ def stop_following(follow_id):
             db.session.commit()
 
         else:
-            flash("You can't unfollow someone that you're not following")
+            flash("You cannot unfollow someone that you are not following")
 
         return redirect(f"/users/{g.user.id}/following")
 
