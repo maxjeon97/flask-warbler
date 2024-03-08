@@ -550,5 +550,6 @@ p.card-bio {
 }
 
 .alert {
-  margin-top: -16px;
+  margin-top: 10px;
+  margin-bottom: 16px;
 }
