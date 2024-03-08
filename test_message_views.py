@@ -129,6 +129,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn('m1-text', html)
+            # add something to the template to make sure its the right one
 
     def test_show_message_unauthorized(self):
         """Tests showing of message when nobody is logged in"""
@@ -259,6 +260,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             html = resp.get_data(as_text=True)
             self.assertIn('m1-text', html)
+            # check that something that wasn't liked is not in here
 
     def test_display_likes_unauthorized(self):
         """Tests display likes in the case that nobody is logged in"""
