@@ -19,11 +19,7 @@ See deployed app <a href="https://warbler-max-jeon.onrender.com">here</a>.
 
 
 ### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
 * [![Flask][Flask.com]][Flask-url]
-* [![React][React.js]][React-url]
 * [![SQLAlchemy][SQLAlchemy.com]][SQLAlchemy-url]
 * [![PostgreSQL][PostgreSQL.com]][PostgreSQL-url]
 * [![Bootstrap][Bootstrap.com]][Bootstrap-url]
